@@ -76,11 +76,12 @@ setInterval(function() {
 }, 1000 / 60);
 
 var canvas = document.getElementById('canvas');
-canvas.width = 800;
-canvas.height = 600;
 var context = canvas.getContext('2d');
-socket.on('state', function(players, projectiles) {
-  context.clearRect(0, 0, 800, 600);
+
+socket.on('state', function(players, projectiles, xMax, yMax) {
+  canvas.width = xMax;
+  canvas.height = yMax;
+  context.clearRect(0, 0, xMax, yMax);
   var scoreX = 8;
   var scoreY = 10;
   context.fillStyle='black';

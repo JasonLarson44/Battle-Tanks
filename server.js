@@ -8,6 +8,19 @@ var app = express();
 var server = http.Server(app);
 var io = socketIO(server);
 
+var xMax = 800; //Canvas width
+var yMax = 600; //Canvas height
+
+var projectiles = []; //track bullets
+var players = {}; //track players
+var tanks = { //track tanks in use
+  brown: false,
+  red: false,
+  blue: false,
+  green: false,
+  pink: false
+};
+
 app.set('port', 5000);
 app.use('/static', express.static(__dirname + '/static'));
 app.use('/img', express.static(__dirname + '/img'));
@@ -41,19 +54,31 @@ function collidingWith(proj){
   return null;
 }
 
+function correctPlayerPosition(){
+  for(var id in players){
+    var player = players[id]; //get each player
+    if(player.x >= (xMax-40)){
+      player.x = xMax-40;
+    }
+    if(player.y >= (yMax-40)){
+      player.y = yMax-40;
+    }
+  }
+}
+
 function updateProj(){
   for(var i = 0; i < projectiles.length; ++i){
     var proj = projectiles[i];
     var deltaX = 5 * Math.cos(proj.angle);
     var deltaY = 5 * Math.sin(proj.angle);
 
-    if((deltaX >= 0 && proj.x <= 780) || (deltaX <= 0 && proj.x >= 0)) {
+    if((deltaX >= 0 && proj.x <= (xMax - 20)) || (deltaX <= 0 && proj.x >= 0)) {
       proj.x += deltaX;
     }
     else{
       projectiles.splice(i, 1);
     }
-    if((deltaY >= 0 && proj.y <= 580) || (deltaY <= 0 && proj.y >= 5)) {
+    if((deltaY >= 0 && proj.y <= (yMax - 20)) || (deltaY <= 0 && proj.y >= 5)) {
       proj.y += deltaY;
     }
     else{
@@ -63,23 +88,18 @@ function updateProj(){
     if(collidingId){
       projectiles.splice(i, 1);
       players[collidingId].dead = 36;
-      players[collidingId].score -= 1;
-      players[proj.id].score += 1;
+      if(players[collidingId] != null && players[proj.id] != null) {
+        players[collidingId].score -= 1;
+        players[proj.id].score += 1;
+      }
     }
   }
 }
-var projectiles = [];
-var players = {};
-var tanks = { //track tanks in use
-  brown: false,
-  red: false,
-  blue: false,
-  green: false,
-  pink: false
-};
 io.on('connection', function(socket) {
   socket.on('new player', function() {
     var newColor;
+    xMax += 75;
+    yMax += 75;
     if(tanks.brown == false){
       newColor = 'brown';
       tanks.brown = true;
@@ -103,8 +123,8 @@ io.on('connection', function(socket) {
     else
       newColor = 'brown';
     players[socket.id] = {
-      x: Math.random() * 775,
-      y: Math.random() * 575,
+      x: Math.random() * xMax,
+      y: Math.random() * yMax,
       width: 40,
       height: 40,
       angle: 0,
@@ -120,6 +140,9 @@ io.on('connection', function(socket) {
 
     socket.on('disconnect', function() {
       console.log(socket.id + " disconnected");
+      xMax -= 75;
+      yMax -= 75;
+      correctPlayerPosition();
       var color = players[socket.id].color;
       tanks[color] = false;
       delete players[socket.id];
@@ -167,10 +190,10 @@ io.on('connection', function(socket) {
 
       var deltaX = player.speed * Math.cos(player.angle);
       var deltaY = player.speed * Math.sin(player.angle);
-      if ((deltaX >= 0 && player.x <= 763) || (deltaX <= 0 && player.x >= 0)) {
+      if ((deltaX >= 0 && player.x <= (xMax - 40)) || (deltaX <= 0 && player.x >= 0)) {
         player.x += deltaX;
       }
-      if ((deltaY >= 0 && player.y <= 565) || (deltaY <= 0 && player.y >= 5)) {
+      if ((deltaY >= 0 && player.y <= (yMax - 40)) || (deltaY <= 0 && player.y >= 5)) {
         player.y += deltaY;
       }
 
@@ -186,11 +209,11 @@ setInterval(function() {
     if(player.dead > 0) {
       player.dead -= 1;
       if(player.dead == 0){//if the player is now alive, spawn in random spot
-        player.x = Math.random() * 775;
-        player.y = Math.random() * 575;
+        player.x = Math.random() * (xMax - 25);
+        player.y = Math.random() * (yMax - 25);
       }
     }
   }
   updateProj();
-  io.sockets.emit('state', players, projectiles);
+  io.sockets.emit('state', players, projectiles, xMax, yMax);
 }, 1000 / 60);
