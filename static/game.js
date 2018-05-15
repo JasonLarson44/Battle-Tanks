@@ -22,6 +22,12 @@ function drawImageRot(img,x,y,width,height,angle){
   context.translate((x + width / 2) * (-1), (y + height / 2) * (-1));
 }
 
+function drawObstacles(obstacles){
+  for(var i = 0; i < obstacles.length; ++i){
+    var img = document.getElementById('obstacle1');
+    drawImageRot(img, obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height, 0);
+  }
+}
 var controls = {
   up: false,
   down: false,
@@ -78,7 +84,7 @@ setInterval(function() {
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
 
-socket.on('state', function(players, projectiles, xMax, yMax) {
+socket.on('state', function(players, projectiles, obstacles, xMax, yMax) {
   canvas.width = xMax;
   canvas.height = yMax;
   context.clearRect(0, 0, xMax, yMax);
@@ -86,6 +92,7 @@ socket.on('state', function(players, projectiles, xMax, yMax) {
   var scoreY = 10;
   context.fillStyle='black';
   context.fillText("Score", scoreX, scoreY);
+  drawObstacles(obstacles);
   for (var id in players) {
     var player = players[id];
     context.fillStyle = player.color;

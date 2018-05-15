@@ -13,6 +13,8 @@ var yMax = 600; //Canvas height
 
 var projectiles = []; //track bullets
 var players = {}; //track players
+var numObs = 10;
+var obstacles = [];
 var tanks = { //track tanks in use
   brown: false,
   red: false,
@@ -33,25 +35,64 @@ app.get('/', function(request, response) {
 // Starts the server.
 server.listen(5000, function() {
   console.log('Starting server on port 5000');
+  spawnObs(); //spawn obstacles
 });
 
 // Add the WebSocket handlers
 io.on('connection', function(socket) {
 });
 
+function spawnObs(){
+  for(var i = 0; i < numObs; ++i){
+    var newObstacle = { x: Math.random() * xMax,
+                        y: Math.random() * yMax,
+                        width: 20 + (Math.random() * 20),
+                        height: 20 + (Math.random() * 20)
+                      };
+    obstacles.push(newObstacle);
+  }
+}
 
-//n^2 this is gross
-function collidingWith(proj){
-  for(var id in players){
+function areColliding(object1, object2){
+  if(object1.x < object2.x + object2.width &&
+    object1.x + object1.width > object2.x &&
+    object1.y < object2.y + object2.height &&
+    object1.height + object1.y > object2.y)
+  { //detected collision
+    return true;
+  }
+  return false;
+}
+
+//check for projectile collisions remove if found
+function checkProjCollision(index){
+  var proj = projectiles[index];
+  var collided = false;
+
+  //check for collisions with players if it still exists
+  for (var id in players) {
     var player = players[id];
-    if(proj.color != player.color && player.dead == 0 && proj.x < player.x + player.width &&
-      proj.x + proj.width > player.x &&
-      proj.y < player.y + player.height &&
-      proj.height + proj.y > player.y){
-      return id;
+    if (areColliding(player, proj) && proj.color != player.color) {
+      projectiles.splice(index, 1);
+      players[id].dead = 36;
+      collided = true;
+      if (players[id] != null && players[proj.id] != null) {
+        players[id].score -= 1;
+        players[proj.id].score += 1;
+      }
+      break;
     }
   }
-  return null;
+  //check for collisions with obstacles
+  if(!collided) {
+    for (var i = 0; i < numObs; ++i) {
+      var obstacle = obstacles[i];
+      if (areColliding(proj, obstacle)) {
+        projectiles.splice(index, 1);
+        break;
+      }
+    }
+  }
 }
 
 function correctPlayerPosition(){
@@ -69,29 +110,26 @@ function correctPlayerPosition(){
 function updateProj(){
   for(var i = 0; i < projectiles.length; ++i){
     var proj = projectiles[i];
+    var outOfBounds = false;
     var deltaX = 5 * Math.cos(proj.angle);
     var deltaY = 5 * Math.sin(proj.angle);
 
-    if((deltaX >= 0 && proj.x <= (xMax - 20)) || (deltaX <= 0 && proj.x >= 0)) {
+    if ((deltaX >= 0 && proj.x <= (xMax - 20)) || (deltaX <= 0 && proj.x >= 0)) {
       proj.x += deltaX;
     }
-    else{
+    else {
       projectiles.splice(i, 1);
+      outOfBounds = true;
     }
-    if((deltaY >= 0 && proj.y <= (yMax - 20)) || (deltaY <= 0 && proj.y >= 5)) {
+    if ((deltaY >= 0 && proj.y <= (yMax - 20)) || (deltaY <= 0 && proj.y >= 5)) {
       proj.y += deltaY;
     }
-    else{
+    else {
       projectiles.splice(i, 1);
+      outOfBounds = true;
     }
-    var collidingId = collidingWith(proj);
-    if(collidingId){
-      projectiles.splice(i, 1);
-      players[collidingId].dead = 36;
-      if(players[collidingId] != null && players[proj.id] != null) {
-        players[collidingId].score -= 1;
-        players[proj.id].score += 1;
-      }
+    if(!outOfBounds){
+      checkProjCollision(i)
     }
   }
 }
@@ -215,5 +253,5 @@ setInterval(function() {
     }
   }
   updateProj();
-  io.sockets.emit('state', players, projectiles, xMax, yMax);
+  io.sockets.emit('state', players, projectiles, obstacles, xMax, yMax);
 }, 1000 / 60);
