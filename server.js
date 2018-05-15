@@ -13,7 +13,7 @@ var yMax = 600; //Canvas height
 
 var projectiles = []; //track bullets
 var players = {}; //track players
-var numObs = 10;
+var numObs = 18;
 var obstacles = [];
 var tanks = { //track tanks in use
   brown: false,
@@ -46,8 +46,8 @@ function spawnObs(){
   for(var i = 0; i < numObs; ++i){
     var newObstacle = { x: Math.random() * xMax,
                         y: Math.random() * yMax,
-                        width: 20 + (Math.random() * 20),
-                        height: 20 + (Math.random() * 20)
+                        width: 20 + (Math.random() * 40),
+                        height: 20 + (Math.random() * 40)
                       };
     obstacles.push(newObstacle);
   }
@@ -72,7 +72,7 @@ function checkProjCollision(index){
   //check for collisions with players if it still exists
   for (var id in players) {
     var player = players[id];
-    if (areColliding(player, proj) && proj.color != player.color) {
+    if (areColliding(player, proj) && proj.color != player.color && player.dead == 0) {
       projectiles.splice(index, 1);
       players[id].dead = 36;
       collided = true;
@@ -93,6 +93,49 @@ function checkProjCollision(index){
       }
     }
   }
+}
+
+function getPlayerCollisions(player) {
+  //check collisions with players
+  var collidingObjs = [];
+  for (var id in players) {
+    var otherPlayer = players[id];
+    if (id != player.id) {
+      if (areColliding(player, otherPlayer) && otherPlayer.dead == 0) {
+        collidingObjs.push(otherPlayer);
+      }
+    }
+  }
+
+  //check collisions with obstacles
+  for (var i = 0; i < numObs; ++i) {
+    var obstacle = obstacles[i];
+    if (areColliding(player, obstacle)) {
+      collidingObjs.push(obstacle);
+    }
+  }
+  return collidingObjs;
+}
+
+function getAvailDirections(collidingObjs, player){
+  var availDirections = {left: true, right: true, up: true, down: true};
+
+  for(var i = 0; i < collidingObjs.length; ++i){
+    var obj = collidingObjs[i];
+    if(obj.x < player.x){
+      availDirections.left = false;
+    }
+    if(obj.x > player.x){
+      availDirections.right = false;
+    }
+    if(obj.y < player.y){
+      availDirections.up = false;
+    }
+    if(obj.y > player.y){
+      availDirections.down = false;
+    }
+  }
+  return availDirections;
 }
 
 function correctPlayerPosition(){
@@ -133,6 +176,25 @@ function updateProj(){
     }
   }
 }
+
+function updatePlayerPos(player){
+  if(player != null) {
+    var deltaX = player.speed * Math.cos(player.angle);
+    var deltaY = player.speed * Math.sin(player.angle);
+
+    var collidingObjs = getPlayerCollisions(player);
+    var availDirections = getAvailDirections(collidingObjs, player);
+
+
+    if ((deltaX >= 0 && player.x <= (xMax - 40) && availDirections.right) || (deltaX <= 0 && player.x >= 0 && availDirections.left)) {
+      player.x += deltaX;
+    }
+    if ((deltaY >= 0 && player.y <= (yMax - 40) && availDirections.down) || (deltaY <= 0 && player.y >= 5) && availDirections.up) {
+      player.y += deltaY;
+    }
+  }
+}
+
 io.on('connection', function(socket) {
   socket.on('new player', function() {
     var newColor;
@@ -225,17 +287,8 @@ io.on('connection', function(socket) {
       if (data.down) {
         player.speed = -3;
       }
-
-      var deltaX = player.speed * Math.cos(player.angle);
-      var deltaY = player.speed * Math.sin(player.angle);
-      if ((deltaX >= 0 && player.x <= (xMax - 40)) || (deltaX <= 0 && player.x >= 0)) {
-        player.x += deltaX;
-      }
-      if ((deltaY >= 0 && player.y <= (yMax - 40)) || (deltaY <= 0 && player.y >= 5)) {
-        player.y += deltaY;
-      }
-
     }
+    updatePlayerPos(players[socket.id]);
     player.speed = 0;
     player.reloading -= 1; //tick down each frame
   });
