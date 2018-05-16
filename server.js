@@ -11,6 +11,16 @@ var io = socketIO(server);
 var xMax = 800; //Canvas width
 var yMax = 600; //Canvas height
 
+var playerWidth = 40;
+var playerHeight = 40;
+
+var dummyObj = {
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0
+};
+
 var projectiles = []; //track bullets
 var players = {}; //track players
 var numObs = 18;
@@ -44,12 +54,72 @@ io.on('connection', function(socket) {
 
 function spawnObs(){
   for(var i = 0; i < numObs; ++i){
-    var newObstacle = { x: Math.random() * xMax,
-                        y: Math.random() * yMax,
+    var newObstacle = { x: 0,
+                        y: 0,
                         width: 20 + (Math.random() * 40),
                         height: 20 + (Math.random() * 40)
                       };
+    randomSpawn(newObstacle);
     obstacles.push(newObstacle);
+  }
+}
+
+function randomSpawn(object){
+  var newX;
+  var newY;
+  var successful = false;
+  var colliding;
+
+  while(!successful) {
+    newX = Math.floor(Math.random() * (xMax - object.width));
+    newY = Math.floor(Math.random() * (yMax - object.height));
+
+    //attempt to move dummy object to new spawn
+    dummyObj.height = object.height;
+    dummyObj.width = object.width;
+    dummyObj.x = newX;
+    dummyObj.y = newY;
+
+    colliding = getObjCollisions(dummyObj).length;
+    if(colliding == 0) //no collisions
+    {
+      object.x = newX;
+      object.y = newY;
+      successful = true;
+      break;
+    }
+  }
+}
+
+function createNewPlayer(newColor){
+  var newPlayer = {
+    x: 0,
+    y: 0,
+    width: playerWidth,
+    height: playerHeight,
+    angle: Math.random() * (2 * Math.PI),
+    speed: 0,
+    name: (Object.keys(players).length +1),
+    color: newColor,
+    reloading: false,
+    dead: 0,
+    score: 0
+  };
+  randomSpawn(newPlayer);
+  return newPlayer;
+}
+
+function setPlayerLoc(player, newX, newY) {
+  dummyPlayer.x = newX;
+  dummyPlayer.y = newY;
+  var collisions = getPlayerCollisions(dummyPlayer);
+  if(collisions.length != 0 || newX > (xMax - 25) || newY > (yMax -25)){ //don't allow placement on other objects
+    return false;
+  }
+  else{
+    player.x = newX;
+    player.y = newY;
+    return true;
   }
 }
 
@@ -95,22 +165,22 @@ function checkProjCollision(index){
   }
 }
 
-function getPlayerCollisions(player) {
+function getObjCollisions(obj) {
   //check collisions with players
   var collidingObjs = [];
   for (var id in players) {
     var otherPlayer = players[id];
-    if (id != player.id) {
-      if (areColliding(player, otherPlayer) && otherPlayer.dead == 0) {
+    if (id != obj.id) {
+      if (areColliding(obj, otherPlayer) && otherPlayer.dead == 0) {
         collidingObjs.push(otherPlayer);
       }
     }
   }
 
   //check collisions with obstacles
-  for (var i = 0; i < numObs; ++i) {
+  for (var i = 0; i < obstacles.length; ++i) {
     var obstacle = obstacles[i];
-    if (areColliding(player, obstacle)) {
+    if (areColliding(obj, obstacle) && obj != obstacle) { //dont match the same object
       collidingObjs.push(obstacle);
     }
   }
@@ -182,7 +252,7 @@ function updatePlayerPos(player){
     var deltaX = player.speed * Math.cos(player.angle);
     var deltaY = player.speed * Math.sin(player.angle);
 
-    var collidingObjs = getPlayerCollisions(player);
+    var collidingObjs = getObjCollisions(player);
     var availDirections = getAvailDirections(collidingObjs, player);
 
 
@@ -222,19 +292,7 @@ io.on('connection', function(socket) {
     }
     else
       newColor = 'brown';
-    players[socket.id] = {
-      x: Math.random() * xMax,
-      y: Math.random() * yMax,
-      width: 40,
-      height: 40,
-      angle: 0,
-      speed: 0,
-      name: (Object.keys(players).length +1),
-      color: newColor,
-      reloading: false,
-      dead: 0,
-      score: 0
-    };
+    players[socket.id] = createNewPlayer(newColor);
     console.log("Player " + socket.id + " connected with coordinates: " + players[socket.id].x + ", " + players[socket.id].y);
     //console.log("and angle " + players[socket.id].angle);
 
