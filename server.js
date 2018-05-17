@@ -96,8 +96,8 @@ function randomSpawn(object){
 
 function getCenter(object){
   center={
-    x: ((object.x + object.width)/2),
-    y: ((object.y + object.height)/2)
+    x: (object.x + (object.width/2)),
+    y: (object.y + (object.height/2))
   }
   return center;
 }
@@ -217,21 +217,20 @@ function getAvailDirections(collidingObjs, player){
     var obj = collidingObjs[i];
     var playerCenter = getCenter(player);
     var objEdges = getObjEdges(obj);
-    pHalfWidth = player.width/2;
-    pHalfHeight = player.height/2;
-    console.log("Object edges: Right: " + objEdges.right + "left: " + objEdges.left);
-    console.log("player center: " + playerCenter.x + ", " +playerCenter.y);
+    var pHalfWidth = player.width/2;
+    var pHalfHeight = player.height/2;
 
-    if(objEdges.right < (playerCenter.x - pHalfWidth)){
+
+    if((objEdges.right < playerCenter.x) && (playerCenter.y - 15 < objEdges.bottom && playerCenter.y + 15 > objEdges.top)){
       availDirections.left = false;
     }
-    if(objEdges.left > (playerCenter.x + pHalfWidth)){
+    if((objEdges.left > playerCenter.x)&& (playerCenter.y - 15 < objEdges.bottom && playerCenter.y + 15 > objEdges.top)){
       availDirections.right = false;
     }
-    if(objCenter.y < playerCenter.y){
+    if((objEdges.bottom < playerCenter.y) && (playerCenter.x - 15 < objEdges.right && playerCenter.x + 15 > objEdges.left)){
       availDirections.up = false;
     }
-    if(objCenter.y > playerCenter.y){
+    if((objEdges.top > playerCenter.y) && (playerCenter.x - 15 < objEdges.right && playerCenter.x + 15 > objEdges.left)){
       availDirections.down = false;
     }
   }

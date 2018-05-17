@@ -102,7 +102,7 @@ socket.on('state', function(players, projectiles, obstacles, xMax, yMax) {
     scoreY += 10;
     context.fillText(player.name + ": " + player.score, scoreX, scoreY);
     if(player.dead == 0) { //player is not dead
-      var tank = document.getElementById(player.color)
+      var tank = document.getElementById(player.color);
       drawImageRot(tank, player.x, player.y, 40, 40, player.angle);
     }
     else{//player's tank was destroyed, display explosion
