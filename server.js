@@ -306,8 +306,7 @@ io.on('connection', function(socket) {
 		msglog.push(msg);
 		socket.broadcast.emit('receive', msg);
 	});
-
-  socket.on('new-player', function(USER) {
+  socket.on('new player', function() {
     var newColor;
     if(tanks.brown == false){
       newColor = 'brown';
@@ -343,7 +342,7 @@ io.on('connection', function(socket) {
     }
     else
       newColor = 'brown';
-    players[socket.id] = createNewPlayer(newColor, USER);
+    players[socket.id] = createNewPlayer(newColor, 'unknown');
     console.log("Player " + socket.id + " connected with coordinates: " + players[socket.id].x + ", " + players[socket.id].y);
 
     socket.on('disconnect', function() {
