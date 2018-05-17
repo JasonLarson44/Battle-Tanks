@@ -3,6 +3,8 @@ socket.on('message', function(data) {
   console.log(data);
 });
 
+var USER='unknown';
+
 function drawImageRot(img,x,y,width,height,angle){
 
   //Convert degrees to radian
@@ -75,7 +77,7 @@ document.addEventListener('keyup', function(event) {
 
   }
 });
-socket.emit('new player');
+socket.emit('new player', USER);
 
 setInterval(function() {
   socket.emit('controls', controls);
@@ -98,36 +100,9 @@ socket.on('state', function(players, projectiles, obstacles, xMax, yMax) {
     var player = players[id];
     context.fillStyle = player.color;
     scoreY += 10;
-    context.fillText(player.color + ": " + player.score, scoreX, scoreY);
+    context.fillText(player.name + ": " + player.score, scoreX, scoreY);
     if(player.dead == 0) { //player is not dead
-      var tank;
-      switch (player.color) {
-        case "brown":
-          tank = document.getElementById("tank1");
-          break;
-
-        case "red":
-          tank = document.getElementById("tank2");
-          break;
-        case "blue":
-          tank = document.getElementById("tank3");
-          break;
-        case "green":
-          tank = document.getElementById("tank4");
-          break;
-        case "pink":
-          tank = document.getElementById("tank5");
-          break;
-        case "orange":
-          tank = document.getElementById("tank6");
-          break;
-        case "purple":
-          tank = document.getElementById("tank7");
-          break;
-        case "white":
-          tank = document.getElementById("tank8");
-          break;
-      }
+      var tank = document.getElementById(player.color)
       drawImageRot(tank, player.x, player.y, 40, 40, player.angle);
     }
     else{//player's tank was destroyed, display explosion
