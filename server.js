@@ -116,7 +116,7 @@ function getCenter(object){
   return center;
 }
 
-function createNewPlayer(newColor){
+function createNewPlayer(newColor, USER){
   var newPlayer = {
     x: 0,
     y: 0,
@@ -124,10 +124,11 @@ function createNewPlayer(newColor){
     height: playerHeight,
     angle: Math.random() * (2 * Math.PI),
     speed: 0,
-    name: (Object.keys(players).length +1),
+    name: USER,
     color: newColor,
     reloading: false,
     dead: 0,
+
     score: 0
   };
   randomSpawn(newPlayer);
@@ -195,7 +196,7 @@ function getObjCollisions(obj) {
   var collidingObjs = [];
   for (var id in players) {
     var otherPlayer = players[id];
-    if (id != obj.id) {
+    if (obj != players[id]) {
       if (areColliding(obj, otherPlayer) && otherPlayer.dead == 0) {
         collidingObjs.push(otherPlayer);
       }
@@ -213,13 +214,14 @@ function getObjCollisions(obj) {
 }
 
 function getObjEdges(object){
-  objCen = getCenter(object);
+  var objCen = getCenter(object);
   var edges={
     top: objCen.y - (object.height/2),
     right: objCen.x + (object.width/2),
     bottom: objCen.y + (object.height/2),
     left: objCen.x - (object.width/2)
   }
+  return edges;
 }
 
 function getAvailDirections(collidingObjs, player){
@@ -227,17 +229,17 @@ function getAvailDirections(collidingObjs, player){
 
   for(var i = 0; i < collidingObjs.length; ++i){
     var obj = collidingObjs[i];
-    var objCenter = getCenter(obj);
     var playerCenter = getCenter(player);
-    var playHalfWid = player.width/2;
-    var objHalfWid = obj.width/2;
-    var playHalfHeight = player.height/2;
-    var objHalfHeight = obj.height/2;
+    var objEdges = getObjEdges(obj);
+    pHalfWidth = player.width/2;
+    pHalfHeight = player.height/2;
+    console.log("Object edges: Right: " + objEdges.right + "left: " + objEdges.left);
+    console.log("player center: " + playerCenter.x + ", " +playerCenter.y);
 
-    if(objCenter.x < playerCenter.x && (objCenter.y + objHalfHeight )){
+    if(objEdges.right < (playerCenter.x - pHalfWidth)){
       availDirections.left = false;
     }
-    if(objCenter.x > playerCenter.x){
+    if(objEdges.left > (playerCenter.x + pHalfWidth)){
       availDirections.right = false;
     }
     if(objCenter.y < playerCenter.y){
@@ -308,7 +310,7 @@ function updatePlayerPos(player){
 }
 
 io.on('connection', function(socket) {
-  socket.on('new player', function() {
+  socket.on('new player', function(USER) {
     var newColor;
     if(tanks.brown == false){
       newColor = 'brown';
@@ -344,7 +346,7 @@ io.on('connection', function(socket) {
     }
     else
       newColor = 'brown';
-    players[socket.id] = createNewPlayer(newColor);
+    players[socket.id] = createNewPlayer(newColor, USER);
     console.log("Player " + socket.id + " connected with coordinates: " + players[socket.id].x + ", " + players[socket.id].y);
     //console.log("and angle " + players[socket.id].angle);
 
