@@ -15,19 +15,17 @@ socket.on('join-room', function (msglog) {
 input = document.getElementById('input-field');
 input.addEventListener('keydown', function (event) {
 	if(event.key == 'Enter') {
-		var value = input.value;
-		if (value != "") {
+		if (input.value != "") {
 			var msg = {
 				name: USER,
-				contents: value
+				contents: input.value
 			};
 			socket.emit('send', msg);
 			addText(msg, 'local');
-			value = null;
+			input.value = null
 		}
 	}
 });
-
 
 username = document.getElementById('username-field');
 username.addEventListener('keydown', function(event) {

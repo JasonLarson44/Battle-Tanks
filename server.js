@@ -290,24 +290,24 @@ function updatePlayerPos(player){
     }
   }
 }
-var msglog = [];
-io.on('connection', function(socket) {
 
+io.on('connection', function(socket) {
+	var msglog = [];
 	socket.on('new-user', function (data) {
+	  console.log('new user');
 		players[socket.id].name = data;
 	  socket.emit('join-room', msglog);
 	});
 
 	socket.on('send', function(msg){
 		while(msglog.length >= 100) {
-			console.log("here");
 			msglog.shift();
 		}
 		msglog.push(msg);
 		socket.broadcast.emit('receive', msg);
 	});
 
-  socket.on('new player', function(USER) {
+  socket.on('new-player', function(USER) {
     var newColor;
     if(tanks.brown == false){
       newColor = 'brown';
@@ -345,7 +345,6 @@ io.on('connection', function(socket) {
       newColor = 'brown';
     players[socket.id] = createNewPlayer(newColor, USER);
     console.log("Player " + socket.id + " connected with coordinates: " + players[socket.id].x + ", " + players[socket.id].y);
-    //console.log("and angle " + players[socket.id].angle);
 
     socket.on('disconnect', function() {
       console.log(socket.id + " disconnected");

@@ -1,9 +1,6 @@
-var socket = io();
 socket.on('message', function(data) {
   console.log(data);
 });
-
-// var USER='unknown';
 
 var canvas = document.getElementById('canvas');
 var context = canvas.getContext('2d');
@@ -42,7 +39,6 @@ var controls = {
 };
 
 canvas.addEventListener('keydown', function(event) {
-  console.log("event: " + event.keyCode);
   switch (event.keyCode) {
     case 65: // A
       controls.left = true;
@@ -81,7 +77,7 @@ canvas.addEventListener('keyup', function(event) {
 
   }
 });
-socket.emit('new player', USER);
+socket.emit('new-player', USER);
 
 setInterval(function() {
   socket.emit('controls', controls);
