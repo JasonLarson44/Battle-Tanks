@@ -118,6 +118,15 @@ socket.on('state', function(players, projectiles, obstacles, xMax, yMax) {
         case "pink":
           tank = document.getElementById("tank5");
           break;
+        case "orange":
+          tank = document.getElementById("tank6");
+          break;
+        case "purple":
+          tank = document.getElementById("tank7");
+          break;
+        case "white":
+          tank = document.getElementById("tank8");
+          break;
       }
       drawImageRot(tank, player.x, player.y, 40, 40, player.angle);
     }

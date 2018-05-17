@@ -23,14 +23,17 @@ var dummyObj = {
 
 var projectiles = []; //track bullets
 var players = {}; //track players
-var numObs = 18;
-var obstacles = [];
+var numObs = Math.floor((xMax * yMax)/ 20000);
+var obstacles = []; //track obstacles
 var tanks = { //track tanks in use
   brown: false,
   red: false,
   blue: false,
   green: false,
-  pink: false
+  pink: false,
+  orange: false,
+  purple: false,
+  white: false
 };
 
 app.set('port', 5000);
@@ -89,6 +92,14 @@ function randomSpawn(object){
       break;
     }
   }
+}
+
+function getCenter(object){
+  center={
+    x: ((object.x + object.width)/2),
+    y: ((object.y + object.height)/2)
+  }
+  return center;
 }
 
 function createNewPlayer(newColor){
@@ -187,21 +198,38 @@ function getObjCollisions(obj) {
   return collidingObjs;
 }
 
+function getObjEdges(object){
+  objCen = getCenter(object);
+  var edges={
+    top: objCen.y - (object.height/2),
+    right: objCen.x + (object.width/2),
+    bottom: objCen.y + (object.height/2),
+    left: objCen.x - (object.width/2)
+  }
+}
+
 function getAvailDirections(collidingObjs, player){
   var availDirections = {left: true, right: true, up: true, down: true};
 
   for(var i = 0; i < collidingObjs.length; ++i){
     var obj = collidingObjs[i];
-    if(obj.x < player.x){
+    var objCenter = getCenter(obj);
+    var playerCenter = getCenter(player);
+    var playHalfWid = player.width/2;
+    var objHalfWid = obj.width/2;
+    var playHalfHeight = player.height/2;
+    var objHalfHeight = obj.height/2;
+
+    if(objCenter.x < playerCenter.x && (objCenter.y + objHalfHeight )){
       availDirections.left = false;
     }
-    if(obj.x > player.x){
+    if(objCenter.x > playerCenter.x){
       availDirections.right = false;
     }
-    if(obj.y < player.y){
+    if(objCenter.y < playerCenter.y){
       availDirections.up = false;
     }
-    if(obj.y > player.y){
+    if(objCenter.y > playerCenter.y){
       availDirections.down = false;
     }
   }
@@ -268,8 +296,6 @@ function updatePlayerPos(player){
 io.on('connection', function(socket) {
   socket.on('new player', function() {
     var newColor;
-    xMax += 75;
-    yMax += 75;
     if(tanks.brown == false){
       newColor = 'brown';
       tanks.brown = true;
@@ -290,6 +316,18 @@ io.on('connection', function(socket) {
       newColor = 'pink';
       tanks.pink = true;
     }
+    else if(tanks.orange == false){
+      newColor = 'orange';
+      tanks.orange = true;
+    }
+    else if(tanks.purple == false){
+      newColor = 'purple';
+      tanks.purple = true;
+    }
+    else if(tanks.white == false){
+      newColor = 'white';
+      tanks.white = true;
+    }
     else
       newColor = 'brown';
     players[socket.id] = createNewPlayer(newColor);
@@ -298,8 +336,6 @@ io.on('connection', function(socket) {
 
     socket.on('disconnect', function() {
       console.log(socket.id + " disconnected");
-      xMax -= 75;
-      yMax -= 75;
       correctPlayerPosition();
       var color = players[socket.id].color;
       tanks[color] = false;
