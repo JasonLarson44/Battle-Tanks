@@ -52,9 +52,6 @@ server.listen(5000, function() {
 });
 
 // Add the WebSocket handlers
-io.on('connection', function(socket) {
-});
-
 function spawnObs(){
   for(var i = 0; i < numObs; ++i){
     var newObstacle = { x: 0,
@@ -295,6 +292,20 @@ function updatePlayerPos(player){
 }
 
 io.on('connection', function(socket) {
+	var msglog = [];
+	socket.on('new-user', function (data) {
+	  console.log('new user');
+		players[socket.id].name = data;
+	  socket.emit('join-room', msglog);
+	});
+
+	socket.on('send', function(msg){
+		while(msglog.length >= 100) {
+			msglog.shift();
+		}
+		msglog.push(msg);
+		socket.broadcast.emit('receive', msg);
+	});
   socket.on('new player', function() {
     var newColor;
     if(tanks.brown == false){
@@ -333,7 +344,6 @@ io.on('connection', function(socket) {
       newColor = 'brown';
     players[socket.id] = createNewPlayer(newColor, 'unknown');
     console.log("Player " + socket.id + " connected with coordinates: " + players[socket.id].x + ", " + players[socket.id].y);
-    //console.log("and angle " + players[socket.id].angle);
 
     socket.on('disconnect', function() {
       console.log(socket.id + " disconnected");

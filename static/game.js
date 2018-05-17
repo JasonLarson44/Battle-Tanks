@@ -1,8 +1,9 @@
-var socket = io();
 socket.on('message', function(data) {
   console.log(data);
 });
 
+var canvas = document.getElementById('canvas');
+var context = canvas.getContext('2d');
 function drawImageRot(img,x,y,width,height,angle){
 
   //Convert degrees to radian
@@ -36,7 +37,7 @@ var controls = {
   shoot: false
 };
 
-document.addEventListener('keydown', function(event) {
+canvas.addEventListener('keydown', function(event) {
   switch (event.keyCode) {
     case 65: // A
       controls.left = true;
@@ -55,7 +56,7 @@ document.addEventListener('keydown', function(event) {
       break;
   }
 });
-document.addEventListener('keyup', function(event) {
+canvas.addEventListener('keyup', function(event) {
   switch (event.keyCode) {
     case 65: // A
       controls.left = false;
@@ -81,13 +82,10 @@ setInterval(function() {
   socket.emit('controls', controls);
 }, 1000 / 60);
 
-var canvas = document.getElementById('canvas');
-var context = canvas.getContext('2d');
-
 socket.on('state', function(players, projectiles, obstacles, xMax, yMax) {
   canvas.width = xMax;
   canvas.height = yMax;
-  context.fillStyle='rgb(192,192,192)';
+  context.fillStyle='#f4f4f4';
   context.fillRect(0, 0, xMax, yMax);
   var scoreX = 8;
   var scoreY = 10;
