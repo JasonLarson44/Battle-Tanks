@@ -290,9 +290,8 @@ function updatePlayerPos(player){
     }
   }
 }
-
-io.on('connection', function(socket) {
-	var msglog = [];
+var msglog = [];
+io.on('connection', function(socket){
 	socket.on('new-user', function (data) {
 	  console.log('new user');
 		players[socket.id].name = data;
