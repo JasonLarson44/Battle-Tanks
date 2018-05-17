@@ -52,7 +52,21 @@ server.listen(5000, function() {
 });
 
 // Add the WebSocket handlers
+var msglog = [];
 io.on('connection', function(socket) {
+	socket.on('new-user', function () {
+		socket.emit('join-room', msglog);
+	});
+
+	socket.on('send', function(msg){
+		while(msglog.length >= 100) {
+			console.log("here");
+			msglog.shift();
+		}
+		msglog.push(msg);
+		// console.log(msglog);
+		socket.broadcast.emit('receive', msg);
+	});
 });
 
 function spawnObs(){

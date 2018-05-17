@@ -87,7 +87,7 @@ var context = canvas.getContext('2d');
 socket.on('state', function(players, projectiles, obstacles, xMax, yMax) {
   canvas.width = xMax;
   canvas.height = yMax;
-  context.fillStyle='rgb(192,192,192)';
+  context.fillStyle='#f4f4f4';
   context.fillRect(0, 0, xMax, yMax);
   var scoreX = 8;
   var scoreY = 10;
