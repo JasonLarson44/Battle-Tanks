@@ -3,8 +3,6 @@ socket.on('message', function(data) {
   console.log(data);
 });
 
-var USER='unknown';
-
 function drawImageRot(img,x,y,width,height,angle){
 
   //Convert degrees to radian
@@ -77,7 +75,7 @@ document.addEventListener('keyup', function(event) {
 
   }
 });
-socket.emit('new player', USER);
+socket.emit('new player');
 
 setInterval(function() {
   socket.emit('controls', controls);
