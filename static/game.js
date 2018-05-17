@@ -3,7 +3,10 @@ socket.on('message', function(data) {
   console.log(data);
 });
 
-var USER='unknown';
+// var USER='unknown';
+
+var canvas = document.getElementById('canvas');
+var context = canvas.getContext('2d');
 
 function drawImageRot(img,x,y,width,height,angle){
 
@@ -38,7 +41,8 @@ var controls = {
   shoot: false
 };
 
-document.addEventListener('keydown', function(event) {
+canvas.addEventListener('keydown', function(event) {
+  console.log("event: " + event.keyCode);
   switch (event.keyCode) {
     case 65: // A
       controls.left = true;
@@ -57,7 +61,7 @@ document.addEventListener('keydown', function(event) {
       break;
   }
 });
-document.addEventListener('keyup', function(event) {
+canvas.addEventListener('keyup', function(event) {
   switch (event.keyCode) {
     case 65: // A
       controls.left = false;
@@ -83,9 +87,6 @@ setInterval(function() {
   socket.emit('controls', controls);
 }, 1000 / 60);
 
-var canvas = document.getElementById('canvas');
-var context = canvas.getContext('2d');
-
 socket.on('state', function(players, projectiles, obstacles, xMax, yMax) {
   canvas.width = xMax;
   canvas.height = yMax;
@@ -102,7 +103,7 @@ socket.on('state', function(players, projectiles, obstacles, xMax, yMax) {
     scoreY += 10;
     context.fillText(player.name + ": " + player.score, scoreX, scoreY);
     if(player.dead == 0) { //player is not dead
-      var tank = document.getElementById(player.color)
+      var tank = document.getElementById(player.color);
       drawImageRot(tank, player.x, player.y, 40, 40, player.angle);
     }
     else{//player's tank was destroyed, display explosion

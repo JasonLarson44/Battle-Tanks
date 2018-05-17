@@ -1,4 +1,3 @@
-// const io = require('socket.io-client')
 var socket = io();
 var USER = 'unknown';
 
@@ -11,31 +10,33 @@ socket.on('join-room', function (msglog) {
 		var source = (msglog[i].name == USER)? 'local' : 'remote';
 		addText(msglog[i], source);
 	}
-
 });
 
-document.getElementById('input-field').addEventListener('keydown', function (event) {
+input = document.getElementById('input-field');
+input.addEventListener('keydown', function (event) {
 	if(event.key == 'Enter') {
-		var text = document.getElementById('input-field');
-		if (text.value != "") {
+		var value = input.value;
+		if (value != "") {
 			var msg = {
 				name: USER,
-				contents: text.value
+				contents: value
 			};
 			socket.emit('send', msg);
 			addText(msg, 'local');
-			text.value = null;
+			value = null;
 		}
 	}
 });
 
-document.getElementById('username-field').addEventListener('keydown', function(event) {
+
+username = document.getElementById('username-field');
+username.addEventListener('keydown', function(event) {
 	if(event.key == 'Enter') {
-		var value = document.getElementById('username-field').value;
+		var value = username.value;
 		if(value != "") {
 			USER = value;
 			hideModal();
-			socket.emit('new-user');
+			socket.emit('new-user', USER);
 		}
 	}
 });
@@ -65,6 +66,4 @@ function hideModal() {
 	var modal = document.getElementsByClassName('modal')[0];
 	backdrop.classList.add('hidden');
 	modal.classList.add('hidden');
-
-	// document.getElementById('input-field').focus();
 }

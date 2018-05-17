@@ -52,23 +52,6 @@ server.listen(5000, function() {
 });
 
 // Add the WebSocket handlers
-var msglog = [];
-io.on('connection', function(socket) {
-	socket.on('new-user', function () {
-		socket.emit('join-room', msglog);
-	});
-
-	socket.on('send', function(msg){
-		while(msglog.length >= 100) {
-			console.log("here");
-			msglog.shift();
-		}
-		msglog.push(msg);
-		// console.log(msglog);
-		socket.broadcast.emit('receive', msg);
-	});
-});
-
 function spawnObs(){
   for(var i = 0; i < numObs; ++i){
     var newObstacle = { x: 0,
@@ -110,8 +93,8 @@ function randomSpawn(object){
 
 function getCenter(object){
   center={
-    x: ((object.x + object.width)/2),
-    y: ((object.y + object.height)/2)
+    x: (object.x + (object.width/2)),
+    y: (object.y + (object.height/2))
   }
   return center;
 }
@@ -231,21 +214,20 @@ function getAvailDirections(collidingObjs, player){
     var obj = collidingObjs[i];
     var playerCenter = getCenter(player);
     var objEdges = getObjEdges(obj);
-    pHalfWidth = player.width/2;
-    pHalfHeight = player.height/2;
-    console.log("Object edges: Right: " + objEdges.right + "left: " + objEdges.left);
-    console.log("player center: " + playerCenter.x + ", " +playerCenter.y);
+    var pHalfWidth = player.width/2;
+    var pHalfHeight = player.height/2;
 
-    if(objEdges.right < (playerCenter.x - pHalfWidth)){
+
+    if((objEdges.right < playerCenter.x) && (playerCenter.y - 15 < objEdges.bottom && playerCenter.y + 15 > objEdges.top)){
       availDirections.left = false;
     }
-    if(objEdges.left > (playerCenter.x + pHalfWidth)){
+    if((objEdges.left > playerCenter.x)&& (playerCenter.y - 15 < objEdges.bottom && playerCenter.y + 15 > objEdges.top)){
       availDirections.right = false;
     }
-    if(objCenter.y < playerCenter.y){
+    if((objEdges.bottom < playerCenter.y) && (playerCenter.x - 15 < objEdges.right && playerCenter.x + 15 > objEdges.left)){
       availDirections.up = false;
     }
-    if(objCenter.y > playerCenter.y){
+    if((objEdges.top > playerCenter.y) && (playerCenter.x - 15 < objEdges.right && playerCenter.x + 15 > objEdges.left)){
       availDirections.down = false;
     }
   }
@@ -308,8 +290,23 @@ function updatePlayerPos(player){
     }
   }
 }
-
+var msglog = [];
 io.on('connection', function(socket) {
+
+	socket.on('new-user', function (data) {
+		players[socket.id].name = data;
+	  socket.emit('join-room', msglog);
+	});
+
+	socket.on('send', function(msg){
+		while(msglog.length >= 100) {
+			console.log("here");
+			msglog.shift();
+		}
+		msglog.push(msg);
+		socket.broadcast.emit('receive', msg);
+	});
+
   socket.on('new player', function(USER) {
     var newColor;
     if(tanks.brown == false){
