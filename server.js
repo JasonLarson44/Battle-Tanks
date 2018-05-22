@@ -156,7 +156,7 @@ function checkProjCollision(index){
       players[id].dead = 36;
       collided = true;
       if (players[id] != null && players[proj.id] != null) {
-        players[id].score -= 1;
+        players[id].score -= .5;
         players[proj.id].score += 1;
       }
       break;
@@ -404,8 +404,7 @@ setInterval(function() {
     if(player.dead > 0) {
       player.dead -= 1;
       if(player.dead == 0){//if the player is now alive, spawn in random spot
-        player.x = Math.random() * (xMax - 25);
-        player.y = Math.random() * (yMax - 25);
+        randomSpawn(player);
       }
     }
   }

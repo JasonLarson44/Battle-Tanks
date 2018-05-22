@@ -10,7 +10,7 @@
     padding: 50px 100px 0 100px;
 }
 
-#canvas, .chat-room {
+#canvas, .chat-room, .score {
     border: solid grey 1px;
     box-shadow: 0px 0px 5px 1px darkgrey;
 }
@@ -19,6 +19,15 @@
     width: 800px;
     height: 600px;
 }
+
+.score{
+    width: 180px;
+}
+.scoretd, .scoreth{
+    border: 1px solid black;
+    padding: 8px;
+}
+
 
 .chat-room {
     display: inline-flex;

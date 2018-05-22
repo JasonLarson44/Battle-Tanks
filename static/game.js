@@ -29,6 +29,40 @@ function drawObstacles(obstacles){
     drawImageRot(img, obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height, 0);
   }
 }
+
+function appendScores(players){
+  var tBody = document.createElement('tbody');
+
+  for(var id in players) {
+    var player = players[id];
+    var row = document.createElement("tr");
+    var playerName = document.createElement("td");
+    var playerScore = document.createElement("td");
+    playerName.classList.add("scoretd");
+    playerScore.classList.add("scoretd");
+    var name = document.createTextNode(player.name);
+    var score = document.createTextNode(player.score);
+
+    playerName.appendChild(name);
+    playerScore.appendChild(score);
+    row.appendChild(playerName);
+    row.appendChild(playerScore);
+    row.style.color = player.color;
+    tBody.appendChild(row);
+  }
+
+  return tBody;
+}
+
+function displayScore(players){
+  var scoreboard = document.getElementById("scoreboard");
+  var oldTbody = scoreboard.getElementsByTagName('tbody')[0];
+  var newTbody = document.createElement('tbody');
+  newTbody.classList.add('score');
+  newTbody = appendScores(players);
+  scoreboard.replaceChild(newTbody, oldTbody);
+}
+
 var controls = {
   up: false,
   down: false,
@@ -87,16 +121,10 @@ socket.on('state', function(players, projectiles, obstacles, xMax, yMax) {
   canvas.height = yMax;
   context.fillStyle='#f4f4f4';
   context.fillRect(0, 0, xMax, yMax);
-  var scoreX = 8;
-  var scoreY = 10;
-  context.fillStyle='black';
-  context.fillText("Score", scoreX, scoreY);
   drawObstacles(obstacles);
+  displayScore(players);
   for (var id in players) {
     var player = players[id];
-    context.fillStyle = player.color;
-    scoreY += 10;
-    context.fillText(player.name + ": " + player.score, scoreX, scoreY);
     if(player.dead == 0) { //player is not dead
       var tank = document.getElementById(player.color);
       drawImageRot(tank, player.x, player.y, 40, 40, player.angle);
