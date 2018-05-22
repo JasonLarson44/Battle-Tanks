@@ -30,6 +30,14 @@ function drawObstacles(obstacles){
   }
 }
 
+function drawPowerups(powerups){
+  for(var i = 0; i < powerups.length; ++i){
+    var pUp = powerups[i];
+    var img = document.getElementById(pUp.type);
+    drawImageRot(img, pUp.x, pUp.y, pUp.width, pUp.height, 0);
+  }
+}
+
 function appendScores(players){
   var tBody = document.createElement('tbody');
 
@@ -116,12 +124,13 @@ setInterval(function() {
   socket.emit('controls', controls);
 }, 1000 / 60);
 
-socket.on('state', function(players, projectiles, obstacles, xMax, yMax) {
+socket.on('state', function(players, projectiles, obstacles, powerups, xMax, yMax) {
   canvas.width = xMax;
   canvas.height = yMax;
   context.fillStyle='#f4f4f4';
   context.fillRect(0, 0, xMax, yMax);
   drawObstacles(obstacles);
+  drawPowerups(powerups);
   displayScore(players);
   for (var id in players) {
     var player = players[id];

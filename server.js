@@ -25,6 +25,7 @@ var projectiles = []; //track bullets
 var players = {}; //track players
 var numObs = Math.floor((xMax * yMax)/ 20000);
 var obstacles = []; //track obstacles
+var powerups = []; //track powerups
 var tanks = { //track tanks in use
   brown: false,
   red: false,
@@ -54,11 +55,12 @@ server.listen(5000, function() {
 // Add the WebSocket handlers
 function spawnObs(){
   for(var i = 0; i < numObs; ++i){
-    var newObstacle = { x: 0,
-                        y: 0,
-                        width: 20 + (Math.random() * 40),
-                        height: 20 + (Math.random() * 40)
-                      };
+    var newObstacle = {
+        x: 0,
+        y: 0,
+        width: 20 + (Math.random() * 40),
+        height: 20 + (Math.random() * 40)
+      };
     randomSpawn(newObstacle);
     obstacles.push(newObstacle);
   }
@@ -91,6 +93,50 @@ function randomSpawn(object){
   }
 }
 
+function spawnPowerups(){
+  var randNum = Math.floor(Math.random() * 800);
+  if(randNum == 44){//I just like this number
+    console.log("spawn a weapon powerup now");
+    var weaponPowerUp = {
+      x: 0,
+      y: 0,
+      width: 20,
+      height: 20,
+      type: "weapon",
+      timer: 900, //15 seconds if 60 updates a second
+      color: 'blue'
+    };
+    randomSpawn(weaponPowerUp);
+    powerups.push(weaponPowerUp);
+  }
+  else if(randNum == 777){
+    console.log("spawn a speed powerup now");
+    var speedPowerUp = {
+      x: 0,
+      y: 0,
+      width: 20,
+      height: 20,
+      type: "speed",
+      timer: 600,
+      color: 'red'
+    };
+    randomSpawn(speedPowerUp);
+    powerups.push(speedPowerUp);
+  }
+}
+
+function removeOldPowerups(){
+  for(var i = 0; i < powerups.length; ++i){
+    var pUp = powerups[i];
+    if(pUp.timer <= 0){
+      powerups.splice(i, 1); //remove old powerup if timed out
+    }
+    else{
+      pUp.timer -= 1;
+    }
+  }
+}
+
 function getCenter(object){
   center={
     x: (object.x + (object.width/2)),
@@ -111,7 +157,8 @@ function createNewPlayer(newColor, USER){
     color: newColor,
     reloading: false,
     dead: 0,
-
+    weaponPowerUp: 0,
+    speedUp: 0,
     score: 0
   };
   randomSpawn(newPlayer);
@@ -156,8 +203,11 @@ function checkProjCollision(index){
       players[id].dead = 36;
       collided = true;
       if (players[id] != null && players[proj.id] != null) {
-        players[id].score -= .5;
-        players[proj.id].score += 1;
+        players[id].score -= 4;
+        if(players[id].score <0){
+          players[id].score = 0;
+        }
+        players[proj.id].score += 5;
       }
       break;
     }
@@ -169,6 +219,24 @@ function checkProjCollision(index){
       if (areColliding(proj, obstacle)) {
         projectiles.splice(index, 1);
         break;
+      }
+    }
+  }
+}
+
+function checkPowerupCollisions(){
+  for(var id in players){
+    var player = players[id];
+    for(var i = 0; i < powerups.length; ++i) {
+      var pUp = powerups[i];
+      if (areColliding(player, pUp)){//this player hit a powerup give it to them and delete it
+        if(pUp.type == 'weapon'){
+          player.weaponPowerUp = 600;
+        }
+        else{
+          player.speedUp = 600;
+        }
+        powerups.splice(i, 1);
       }
     }
   }
@@ -367,7 +435,27 @@ io.on('connection', function(socket){
           width: 5,
           height: 5
         });
-        player.reloading = 30;
+        if(player.weaponPowerUp) { //shoot two more bullets
+          projectiles.push({
+            id: socket.id,
+            color: player.color,
+            x: player.x + 15,
+            y: player.y + 20,
+            angle: player.angle - .08,
+            width: 5,
+            height: 5
+          });
+          projectiles.push({
+            id: socket.id,
+            color: player.color,
+            x: player.x + 15,
+            y: player.y + 20,
+            angle: player.angle + .08,
+            width: 5,
+            height: 5
+          });
+        }
+        player.reloading = 60;
       }
 
       if (data.left) {
@@ -378,7 +466,12 @@ io.on('connection', function(socket){
           player.angle = 2 * Math.PI;
       }
       if (data.up) {
-        player.speed = 3;
+        if(player.speedUp <= 0) {
+          player.speed = 3;
+        }
+        else{
+          player.speed = 4.5;
+        }
       }
       if (data.right) {
         if (player.angle <= 2 * Math.PI) {
@@ -389,7 +482,12 @@ io.on('connection', function(socket){
 
       }
       if (data.down) {
-        player.speed = -3;
+        if(player.speedUp <= 0) {
+          player.speed = -3;
+        }
+        else{
+          player.speed = -4.5;
+        }
       }
     }
     updatePlayerPos(players[socket.id]);
@@ -407,7 +505,16 @@ setInterval(function() {
         randomSpawn(player);
       }
     }
+    if(player.weaponPowerUp > 0){
+      player.weaponPowerUp -= 1; //set to 1200 on powerup pickup for 20 seconds
+    }
+    if(player.speedUp > 0){
+      player.speedUp -= 1; //set to 1200 on powerup pickup for 20 seconds
+    }
   }
   updateProj();
-  io.sockets.emit('state', players, projectiles, obstacles, xMax, yMax);
+  removeOldPowerups();
+  spawnPowerups();
+  checkPowerupCollisions();
+  io.sockets.emit('state', players, projectiles, obstacles, powerups, xMax, yMax);
 }, 1000 / 60);
