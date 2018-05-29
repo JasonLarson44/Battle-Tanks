@@ -93,6 +93,18 @@ canvas.addEventListener('keydown', function(event) {
     case 83: // S
       controls.down = true;
       break;
+    case 37: // left arrow
+      controls.left = true;
+      break;
+    case 38: // up arrow
+      controls.up = true;
+      break;
+    case 39: // right arrow
+      controls.right = true;
+      break;
+    case 40: // down arrow
+      controls.down = true;
+      break;
     case 32: //spacebar
       controls.shoot = true;
       break;
@@ -110,6 +122,18 @@ canvas.addEventListener('keyup', function(event) {
       controls.right = false;
       break;
     case 83: // S
+      controls.down = false;
+      break;
+    case 37: // left arrow
+      controls.left = false;
+      break;
+    case 38: // up arrow
+      controls.up = false;
+      break;
+    case 39: // right arrow
+      controls.right = false;
+      break;
+    case 40: // down arrow
       controls.down = false;
       break;
     case 32: // Spacebar

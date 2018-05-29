@@ -318,8 +318,8 @@ function updateProj(){
   for(var i = 0; i < projectiles.length; ++i){
     var proj = projectiles[i];
     var outOfBounds = false;
-    var deltaX = 5 * Math.cos(proj.angle);
-    var deltaY = 5 * Math.sin(proj.angle);
+    var deltaX = proj.speed * Math.cos(proj.angle);
+    var deltaY = proj.speed * Math.sin(proj.angle);
 
     if ((deltaX >= 0 && proj.x <= (xMax - 20)) || (deltaX <= 0 && proj.x >= 0)) {
       proj.x += deltaX;
@@ -433,7 +433,8 @@ io.on('connection', function(socket){
           y: player.y + 20,
           angle: player.angle,
           width: 5,
-          height: 5
+          height: 5,
+          speed: 8
         });
         if(player.weaponPowerUp) { //shoot two more bullets
           projectiles.push({
@@ -443,7 +444,8 @@ io.on('connection', function(socket){
             y: player.y + 20,
             angle: player.angle - .08,
             width: 5,
-            height: 5
+            height: 5,
+            speed: 8
           });
           projectiles.push({
             id: socket.id,
@@ -452,7 +454,8 @@ io.on('connection', function(socket){
             y: player.y + 20,
             angle: player.angle + .08,
             width: 5,
-            height: 5
+            height: 5,
+            speed: 8
           });
         }
         player.reloading = 60;
