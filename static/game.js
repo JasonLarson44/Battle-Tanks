@@ -38,6 +38,14 @@ function drawPowerups(powerups){
   }
 }
 
+function drawPlayerHealth(player){
+  var imgName = 'health';
+  imgName += player.health; //append health number to load correct image
+
+  var img = document.getElementById(imgName);
+  drawImageRot(img, player.x, player.y - 20, player.width, 10, 0);
+}
+
 function appendScores(players){
   var tBody = document.createElement('tbody');
 
@@ -161,6 +169,7 @@ socket.on('state', function(players, projectiles, obstacles, powerups, xMax, yMa
     if(player.dead == 0) { //player is not dead
       var tank = document.getElementById(player.color);
       drawImageRot(tank, player.x, player.y, 40, 40, player.angle);
+      drawPlayerHealth(player);
     }
     else{//player's tank was destroyed, display explosion
       var explosion;

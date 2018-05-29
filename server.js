@@ -159,6 +159,7 @@ function createNewPlayer(newColor, USER){
     dead: 0,
     weaponPowerUp: 0,
     speedUp: 0,
+    health: 3,
     score: 0
   };
   randomSpawn(newPlayer);
@@ -200,10 +201,12 @@ function checkProjCollision(index){
     var player = players[id];
     if (areColliding(player, proj) && proj.color != player.color && player.dead == 0) {
       projectiles.splice(index, 1);
-      players[id].dead = 36;
+      players[id].health -= 1;
       collided = true;
-      if (players[id] != null && players[proj.id] != null) {
+      if (players[id] != null && players[proj.id] != null && players[id].health <= 0) {
         players[id].score -= 4;
+        players[id].dead = 36;
+        players[id].health = 3;
         if(players[id].score <0){
           players[id].score = 0;
         }
